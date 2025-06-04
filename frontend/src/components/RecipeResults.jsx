@@ -7,8 +7,7 @@ const RecipeResults = ({ recipes }) => {
   }
 
   return (
-    <section className="mt-8">
-      <h2 className="text-xl font-bold mb-4">Recipe Results</h2>
+    <section >
       <div className="space-y-4">
         {recipes.map((recipe) => (
           <RecipeCard key={recipe.id} recipe={recipe} />

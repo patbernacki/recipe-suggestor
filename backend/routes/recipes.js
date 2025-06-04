@@ -5,47 +5,51 @@ const router = express.Router();
 require('dotenv').config();
 
 router.get('/', async (req, res) => {
-  const { ingredients, limit = 20, offset = 0 } = req.query;
+  const { ingredients, limit = 20, offset = 0, type } = req.query;
 
   try {
-    let response;
-    if (ingredients) {
-      // Search by ingredients
-      response = await axios.get('https://api.spoonacular.com/recipes/findByIngredients', {
-        params: {
-          ingredients,
-          number: 60,
-          apiKey: process.env.SPOONACULAR_API_KEY
-        }
-      });
-    } else {
-      // Get random recipes when no ingredients provided
-      response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
-        params: {
-          number: 60,
-          addRecipeInformation: true,
-          fillIngredients: true,
-          apiKey: process.env.SPOONACULAR_API_KEY
-        }
-      });
-      // Transform the response to match the format of findByIngredients
-      response.data = response.data.results.map(recipe => ({
-        ...recipe,
-        missedIngredients: [],
-        missedIngredientCount: 0,
-        usedIngredients: [],
-        usedIngredientCount: 0,
-        likes: recipe.aggregateLikes || 0
-      }));
+    // Always use complexSearch endpoint with different parameters based on whether ingredients are provided
+    const params = {
+      apiKey: process.env.SPOONACULAR_API_KEY,
+      number: parseInt(limit),
+      offset: parseInt(offset),
+      addRecipeInformation: true,
+      fillIngredients: true
+    };
+
+    // Add type filter if provided
+    if (type) {
+      params.type = type;
     }
 
-    const allResults = ingredients ? response.data : response.data;
-    const paginatedResults = allResults.slice(offset, parseInt(offset) + parseInt(limit));
+    // If ingredients are provided, use them to filter recipes
+    if (ingredients) {
+      params.includeIngredients = ingredients;
+      params.sort = 'min-missing-ingredients'; // Sort to prioritize recipes with more matching ingredients
+      params.ranking = 2;
+    }
+
+    const response = await axios.get('https://api.spoonacular.com/recipes/complexSearch', {
+      params
+    });
+
+    const results = response.data.results.map(recipe => ({
+      id: recipe.id,
+      title: recipe.title,
+      image: recipe.image,
+      imageType: recipe.imageType,
+      usedIngredientCount: recipe.usedIngredientCount || 0,
+      missedIngredientCount: recipe.missedIngredientCount || 0,
+      missedIngredients: recipe.missedIngredients || [],
+      usedIngredients: recipe.usedIngredients || [],
+      unusedIngredients: recipe.unusedIngredients || [],
+      likes: recipe.aggregateLikes || 0
+    }));
 
     res.json({
-      recipes: paginatedResults,
-      total: allResults.length,
-      hasMore: parseInt(offset) + parseInt(limit) < allResults.length
+      recipes: results,
+      total: response.data.totalResults,
+      hasMore: (parseInt(offset) + results.length) < response.data.totalResults
     });
   } catch (error) {
     console.error('Error fetching recipes:', error.message);
