@@ -30,7 +30,7 @@ const RecipeDetails = () => {
   if (!recipe) return <div className="p-4">Recipe not found.</div>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-lg shadow">
+    <div className="max-w-5xl mx-auto p-6 mt-8 mb-8 sm-bg-white rounded-lg shadow">
       <div className="flex flex-col md:flex-row md:space-x-6">
         <img
           src={recipe.image}

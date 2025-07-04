@@ -3,6 +3,8 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 require('dotenv').config();
+const knex = require('../db');
+const authenticateToken = require('../middleware/auth');
 
 router.get('/', async (req, res) => {
   const { ingredients, limit = 20, offset = 0, type } = req.query;
@@ -57,6 +59,49 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get all saved recipes for the authenticated user
+router.get('/saved', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    console.log('Fetching saved recipes for userId:', userId);
+    const saved = await knex('saved_recipes')
+      .where({ user_id: userId })
+      .select('id', 'recipe_id', 'created_at');
+    res.json({ saved });
+  } catch (error) {
+    console.error('Error fetching saved recipes:', error);
+    console.error('userId:', userId);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ message: 'Failed to fetch saved recipes.' });
+  }
+});
+
+// Save a recipe for the authenticated user
+router.post('/save', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const { recipe_id } = req.body;
+
+  if (!recipe_id) {
+    return res.status(400).json({ message: 'Recipe ID is required.' });
+  }
+
+  try {
+    // Check if already saved
+    const existing = await knex('saved_recipes')
+      .where({ user_id: userId, recipe_id })
+      .first();
+    if (existing) {
+      return res.status(200).json({ message: 'Recipe already saved.' });
+    }
+    // Insert new saved recipe
+    await knex('saved_recipes').insert({ user_id: userId, recipe_id });
+    res.status(201).json({ message: 'Recipe saved!' });
+  } catch (error) {
+    console.error('Error saving recipe:', error);
+    res.status(500).json({ message: 'Failed to save recipe.' });
+  }
+});
+
 // Get recipe details by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -69,6 +114,25 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching recipe details:', error.message);
     res.status(500).json({ message: 'Failed to fetch recipe details' });
+  }
+});
+
+// Remove a saved recipe by its saved_recipes table id
+router.delete('/saved/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const savedId = req.params.id;
+  try {
+    const deleted = await knex('saved_recipes')
+      .where({ id: savedId, user_id: userId })
+      .del();
+    if (deleted) {
+      res.json({ message: 'Saved recipe removed.' });
+    } else {
+      res.status(404).json({ message: 'Saved recipe not found.' });
+    }
+  } catch (error) {
+    console.error('Error removing saved recipe:', error);
+    res.status(500).json({ message: 'Failed to remove saved recipe.' });
   }
 });
 

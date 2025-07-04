@@ -22,22 +22,43 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/register" className="font-medium text-green-600 hover:text-green-500">
-            create a new account
-          </Link>
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8 justify-center pb-40">
+      <Link
+        to="/"
+        className="absolute top-8 left-8 flex items-center text-gray-900 hover:text-green-600 transition-colors"
+      >
+        <svg
+          className="h-6 w-6 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        <span className="text-lg font-semibold">Recipe Finder</span>
+      </Link>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="py-8 px-4 sm:bg-white sm:shadow sm:rounded-lg sm:px-10">
+          
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <Link to="/register" className="font-medium text-green-600 hover:text-green-500">
+              create a new account
+            </Link>
+          </p>
+        </div>
+
+          <form className="space-y-6 mt-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
                 {error}

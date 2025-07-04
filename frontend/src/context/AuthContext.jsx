@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [savedRecipes, setSavedRecipes] = useState([]);
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -13,6 +14,7 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       fetchUserProfile(token);
+      fetchSavedRecipes(token);
     } else {
       setLoading(false);
     }
@@ -32,6 +34,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchSavedRecipes = async (token) => {
+    try {
+      const response = await axios.get(`${baseUrl}/recipes/saved`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSavedRecipes(response.data.saved || []);
+    } catch (error) {
+      console.error('Error fetching saved recipes:', error.response?.data || error.message);
+      setSavedRecipes([]);
+    }
+  };
+
+  const refreshSavedRecipes = () => {
+    const token = localStorage.getItem('token');
+    if (token) fetchSavedRecipes(token);
+  };
+
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${baseUrl}/auth/login`, {
@@ -41,6 +60,7 @@ export const AuthProvider = ({ children }) => {
       const { token } = response.data;
       localStorage.setItem('token', token);
       await fetchUserProfile(token);
+      await fetchSavedRecipes(token);
       return { success: true };
     } catch (error) {
       return {
@@ -68,6 +88,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setSavedRecipes([]);
   };
 
   const value = {
@@ -75,7 +96,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    logout
+    logout,
+    savedRecipes,
+    refreshSavedRecipes
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
