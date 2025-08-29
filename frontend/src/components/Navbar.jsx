@@ -1,10 +1,30 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    // Add event listener when dropdown is open
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <nav className="bg-gradient-to-b from-gray-50 to-gray-100 shadow-sm">
@@ -14,12 +34,12 @@ const Navbar = () => {
             <Link to="/" className="flex items-center">
               <h1 className="text-3xl font-bold text-gray-900">Recipe Finder</h1>
             </Link>
-            <p className="mt-2 text-gray-600">Discover delicious recipes with ingredients you have at home</p>
+            <p className="mt-2 text-gray-600 hidden md:block">Discover delicious recipes with ingredients you have at home</p>
           </div>
 
           <div className="flex items-center">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
@@ -46,6 +66,7 @@ const Navbar = () => {
                       <Link
                         to="/saved-recipes"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsMenuOpen(false)}
                       >
                         Saved Recipes
                       </Link>

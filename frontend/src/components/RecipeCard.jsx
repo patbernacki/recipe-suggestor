@@ -60,11 +60,11 @@ const RecipeCard = ({ recipe, isSaved }) => {
   return (
     <Link to={`/recipes/${recipe.id}`} state={{ likes: recipe.likes }} className="block">
       <div className="bg-white rounded-2xl overflow-hidden shadow transition-shadow duration-200 hover:shadow-lg">
-        <div className="flex flex-col md:flex-row gap-4 p-4">
+        <div className="flex flex-col lg:flex-row gap-4 p-4">
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="w-full md:w-48 h-auto object-cover rounded-xl"
+            className="w-full lg:w-48 h-48 lg:h-auto object-cover rounded-xl"
           />
 
           <div className="flex-1">
