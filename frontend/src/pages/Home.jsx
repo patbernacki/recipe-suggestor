@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import IngredientSelector from '../components/IngredientSelector';
 import RecipeResults from '../components/RecipeResults';
 import { useAuth } from '../context/AuthContext';
@@ -40,8 +40,9 @@ const Home = () => {
     return saved || '';
   });
   const limit = 20;
+  const isInitialMount = useRef(true);
 
-  const fetchRecipes = async (isLoadMore = false) => {
+  const fetchRecipes = useCallback(async (isLoadMore = false) => {
     setLoading(true);
     setError(null);
 
@@ -86,11 +87,11 @@ const Home = () => {
       }
     } catch (err) {
       setError(err.message);
-      setRecipes(isLoadMore ? recipes : []); // Keep existing recipes on load more failure
+      setRecipes(prev => isLoadMore ? prev : []); // Keep existing recipes on load more failure
     } finally {
       setLoading(false);
     }
-  };
+  }, [baseUrl, ingredients, selectedDishType, offset, limit]);
 
   // Save ingredients to localStorage whenever they change
   useEffect(() => {
@@ -124,10 +125,36 @@ const Home = () => {
     }
   }, [user, savedIngredients, logoutTrigger]); // Add logoutTrigger as dependency
 
+  // Clear recipes when user logs out (only if ingredients are selected)
   useEffect(() => {
-    // Fetch recipes on initial load or when dependencies change
-    fetchRecipes(false);
-  }, [baseUrl, ingredients, selectedDishType]); // Added dependencies
+    if (!user && ingredients.length > 0) {
+      setRecipes([]);
+      setError(null);
+      setOffset(0);
+      setHasMore(false);
+    } else if (!user && ingredients.length === 0) {
+      // If user logs out and no ingredients are selected, fetch default recipes
+      fetchRecipes(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, ingredients.length]); // fetchRecipes excluded to prevent infinite loop
+
+  // Auto-fetch when dish type changes (but not when ingredients change)
+  useEffect(() => {
+    if (!isInitialMount.current && ingredients.length > 0) {
+      fetchRecipes(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDishType, ingredients.length]); // fetchRecipes excluded to prevent infinite loop
+
+  // Initial search when component mounts (only if ingredients exist)
+  useEffect(() => {
+    if (isInitialMount.current && ingredients.length > 0) {
+      fetchRecipes(false);
+      isInitialMount.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ingredients.length]); // fetchRecipes excluded to prevent infinite loop
 
   const handleLoadMore = () => {
     fetchRecipes(true);
@@ -183,16 +210,6 @@ const Home = () => {
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-900">Select Your Ingredients</h2>
               <div className="space-y-4">
-                {(ingredients.length > 0 || selectedDishType) && (
-                  <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-600">
-                      💾 {ingredients.length > 0 && `${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''}`}
-                      {ingredients.length > 0 && selectedDishType && ' and '}
-                      {selectedDishType && `${DISH_TYPES.find(t => t.value === selectedDishType)?.label || selectedDishType} filter`}
-                      {user ? ' synced to database' : ' saved locally'}
-                    </p>
-                  </div>
-                )}
                 <div className="mb-4">
                   <label htmlFor="dishType" className="block text-sm font-medium text-gray-700 mb-1">
                     Filter by Dish Type
@@ -279,16 +296,6 @@ const Home = () => {
           <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
             <h2 className="text-xl font-semibold mb-4">Select Your Ingredients</h2>
             <div className="space-y-4">
-              {(ingredients.length > 0 || selectedDishType) && (
-                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-600">
-                    💾 {ingredients.length > 0 && `${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''}`}
-                    {ingredients.length > 0 && selectedDishType && ' and '}
-                    {selectedDishType && `${DISH_TYPES.find(t => t.value === selectedDishType)?.label || selectedDishType} filter`}
-                    {user ? ' synced to database' : ' saved locally'}
-                  </p>
-                </div>
-              )}
               <div className="mb-4">
                 <label htmlFor="dishTypeDesktop" className="block text-sm font-medium text-gray-700 mb-1">
                   Filter by Dish Type
@@ -381,7 +388,7 @@ const Home = () => {
                       <p>Searching for recipes...</p>
                     </div>
                   ) : (
-                    <p>Select ingredients and search to discover recipes!</p>
+                    <p>Select ingredients and click "Find Recipes" to discover recipes!</p>
                   )}
                 </div>
               ) : (
