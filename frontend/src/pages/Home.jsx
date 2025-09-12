@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import IngredientSelector from '../components/IngredientSelector';
 import RecipeResults from '../components/RecipeResults';
+import { useAuth } from '../context/AuthContext';
 
 const DISH_TYPES = [
   { value: '', label: 'All Dishes' },
@@ -18,15 +19,26 @@ const DISH_TYPES = [
 ];
 
 const Home = () => {
-  const [ingredients, setIngredients] = useState([]);
+  const { user, savedIngredients, saveIngredient, removeIngredient, logoutTrigger } = useAuth();
+  
+  const [ingredients, setIngredients] = useState(() => {
+    // Load saved ingredients from localStorage on component mount
+    const saved = localStorage.getItem('selectedIngredients');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [selectedDishType, setSelectedDishType] = useState('');
+  const [selectedDishType, setSelectedDishType] = useState(() => {
+    // Load saved dish type from localStorage on component mount
+    const saved = localStorage.getItem('selectedDishType');
+    return saved || '';
+  });
   const limit = 20;
 
   const fetchRecipes = async (isLoadMore = false) => {
@@ -80,6 +92,38 @@ const Home = () => {
     }
   };
 
+  // Save ingredients to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('selectedIngredients', JSON.stringify(ingredients));
+  }, [ingredients]);
+
+  // Save dish type to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('selectedDishType', selectedDishType);
+  }, [selectedDishType]);
+
+  // Sync ingredients from database when user logs in
+  useEffect(() => {
+    if (user && savedIngredients.length > 0) {
+      // If user has saved ingredients in database, use those
+      setIngredients(savedIngredients);
+      // Also update localStorage as backup
+      localStorage.setItem('selectedIngredients', JSON.stringify(savedIngredients));
+    } else if (user && savedIngredients.length === 0) {
+      // If user is logged in but has no saved ingredients, clear local ingredients
+      // This handles the case where localStorage was cleared after sync
+      setIngredients([]);
+    } else if (!user) {
+      // If user is not logged in, load from localStorage (guest mode)
+      const localIngredients = localStorage.getItem('selectedIngredients');
+      if (localIngredients) {
+        setIngredients(JSON.parse(localIngredients));
+      } else {
+        setIngredients([]);
+      }
+    }
+  }, [user, savedIngredients, logoutTrigger]); // Add logoutTrigger as dependency
+
   useEffect(() => {
     // Fetch recipes on initial load or when dependencies change
     fetchRecipes(false);
@@ -87,6 +131,29 @@ const Home = () => {
 
   const handleLoadMore = () => {
     fetchRecipes(true);
+  };
+
+  const clearAllSelections = async () => {
+    setIngredients([]);
+    setSelectedDishType('');
+    setOffset(0);
+    
+    // Clear localStorage
+    localStorage.removeItem('selectedIngredients');
+    localStorage.removeItem('selectedDishType');
+    
+    // If user is logged in, also clear from database
+    if (user && savedIngredients.length > 0) {
+      try {
+        // Remove all saved ingredients from database
+        for (const ingredient of savedIngredients) {
+          await removeIngredient(ingredient);
+        }
+      } catch (error) {
+        console.error('Error clearing ingredients from database:', error);
+        // Fallback: just clear localStorage
+      }
+    }
   };
 
   return (
@@ -116,6 +183,16 @@ const Home = () => {
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-900">Select Your Ingredients</h2>
               <div className="space-y-4">
+                {(ingredients.length > 0 || selectedDishType) && (
+                  <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-600">
+                      💾 {ingredients.length > 0 && `${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''}`}
+                      {ingredients.length > 0 && selectedDishType && ' and '}
+                      {selectedDishType && `${DISH_TYPES.find(t => t.value === selectedDishType)?.label || selectedDishType} filter`}
+                      {user ? ' synced to database' : ' saved locally'}
+                    </p>
+                  </div>
+                )}
                 <div className="mb-4">
                   <label htmlFor="dishType" className="block text-sm font-medium text-gray-700 mb-1">
                     Filter by Dish Type
@@ -141,7 +218,18 @@ const Home = () => {
                   ingredients={ingredients} 
                   setIngredients={setIngredients} 
                   disabled={loading}
+                  onAddIngredient={user ? saveIngredient : undefined}
+                  onRemoveIngredient={user ? removeIngredient : undefined}
                 />
+                {(ingredients.length > 0 || selectedDishType) && (
+                  <button
+                    onClick={clearAllSelections}
+                    className="w-full px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all mb-3"
+                    disabled={loading}
+                  >
+                    Clear All Selections
+                  </button>
+                )}
                 <button
                   className={`w-full px-4 py-3 text-white rounded-lg transition-all transform hover:scale-[1.02] relative ${
                     ingredients.length > 0 && !loading
@@ -191,6 +279,16 @@ const Home = () => {
           <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
             <h2 className="text-xl font-semibold mb-4">Select Your Ingredients</h2>
             <div className="space-y-4">
+              {(ingredients.length > 0 || selectedDishType) && (
+                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-600">
+                    💾 {ingredients.length > 0 && `${ingredients.length} ingredient${ingredients.length !== 1 ? 's' : ''}`}
+                    {ingredients.length > 0 && selectedDishType && ' and '}
+                    {selectedDishType && `${DISH_TYPES.find(t => t.value === selectedDishType)?.label || selectedDishType} filter`}
+                    {user ? ' synced to database' : ' saved locally'}
+                  </p>
+                </div>
+              )}
               <div className="mb-4">
                 <label htmlFor="dishTypeDesktop" className="block text-sm font-medium text-gray-700 mb-1">
                   Filter by Dish Type
@@ -216,7 +314,18 @@ const Home = () => {
                 ingredients={ingredients} 
                 setIngredients={setIngredients} 
                 disabled={loading}
+                onAddIngredient={user ? saveIngredient : undefined}
+                onRemoveIngredient={user ? removeIngredient : undefined}
               />
+              {(ingredients.length > 0 || selectedDishType) && (
+                <button
+                  onClick={clearAllSelections}
+                  className="w-full px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all mb-3"
+                  disabled={loading}
+                >
+                  Clear All Selections
+                </button>
+              )}
               <button
                 className={`w-full px-4 py-3 text-white rounded-lg transition-all transform hover:scale-[1.02] relative ${
                   ingredients.length > 0 && !loading

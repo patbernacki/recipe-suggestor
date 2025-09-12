@@ -10,6 +10,7 @@ const RecipeCard = ({ recipe, isSaved }) => {
   const { user, savedRecipes, refreshSavedRecipes } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(isSaved);
+  const [showLoginMessage, setShowLoginMessage] = useState(false);
 
   // Keep local saved state in sync with prop
   useEffect(() => {
@@ -22,6 +23,15 @@ const RecipeCard = ({ recipe, isSaved }) => {
   const handleSave = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // If user is not logged in, show login message
+    if (!user) {
+      setShowLoginMessage(true);
+      // Hide message after 3 seconds
+      setTimeout(() => setShowLoginMessage(false), 3000);
+      return;
+    }
+
     setSaving(true);
     const token = localStorage.getItem('token');
     try {
@@ -59,7 +69,19 @@ const RecipeCard = ({ recipe, isSaved }) => {
 
   return (
     <Link to={`/recipes/${recipe.id}`} state={{ likes: recipe.likes }} className="block">
-      <div className="bg-white rounded-2xl overflow-hidden shadow transition-shadow duration-200 hover:shadow-lg">
+      <div className="bg-white rounded-2xl overflow-hidden shadow transition-shadow duration-200 hover:shadow-lg relative">
+        {/* Login Required Message */}
+        {showLoginMessage && (
+          <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-10 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">Sign in to save recipes</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-4 p-4">
           <img
             src={recipe.image}
@@ -72,14 +94,14 @@ const RecipeCard = ({ recipe, isSaved }) => {
               <h3 className="text-xl font-semibold">{recipe.title}</h3>
               <div className="flex items-center gap-2 text-green-600">
                 <div className="flex items-center gap-1">
-                  <ThumbsUp size={18} />
-                  <span className="text-sm font-medium">{recipe.likes || recipe.aggregateLikes || 0}</span>
+                  <ThumbsUp fill="#9ca3af" color="#9ca3af" size={18} />
+                  <span className="text-sm font-medium text-gray-400">{recipe.likes || recipe.aggregateLikes || 0}</span>
                 </div>
                 <button
                   type="button"
                   className={`ml-2 p-1 rounded-full hover:bg-green-100 transition`}
                   onClick={handleSave}
-                  disabled={!user || saving}
+                  disabled={saving}
                   title={user ? (saved ? 'Unsave recipe' : 'Save recipe') : 'Login to save'}
                 >
                   <Star fill={saved ? '#22c55e' : 'none'} color="#22c55e" size={20} />

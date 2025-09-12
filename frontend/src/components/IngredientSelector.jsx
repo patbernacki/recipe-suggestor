@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-const IngredientSelector = ({ ingredients, setIngredients, disabled }) => {
+const IngredientSelector = ({ ingredients, setIngredients, disabled, onAddIngredient, onRemoveIngredient }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,16 +45,36 @@ const IngredientSelector = ({ ingredients, setIngredients, disabled }) => {
     return () => clearTimeout(timeoutId);
   }, [query, debouncedFetchSuggestions, disabled]);
 
-  const addIngredient = (ingredient) => {
+  const addIngredient = async (ingredient) => {
     if (!ingredients.includes(ingredient)) {
       setIngredients([...ingredients, ingredient]);
+      
+      // If callback provided, use it (for database operations)
+      if (onAddIngredient) {
+        try {
+          await onAddIngredient(ingredient);
+        } catch (error) {
+          console.error('Error saving ingredient to database:', error);
+          // Fallback: ingredient is already in local state
+        }
+      }
     }
     setQuery('');
     setSuggestions([]);
   };
 
-  const removeIngredient = (ingredient) => {
+  const removeIngredient = async (ingredient) => {
     setIngredients(ingredients.filter((i) => i !== ingredient));
+    
+    // If callback provided, use it (for database operations)
+    if (onRemoveIngredient) {
+      try {
+        await onRemoveIngredient(ingredient);
+      } catch (error) {
+        console.error('Error removing ingredient from database:', error);
+        // Fallback: ingredient is already removed from local state
+      }
+    }
   };
 
   return (
@@ -125,7 +145,7 @@ const IngredientSelector = ({ ingredients, setIngredients, disabled }) => {
       )}
 
       {ingredients.length === 0 && (
-        <p className="text-sm font-medium mb-2">You currently do not have any ingredients</p>
+        <p className="text-sm text-gray-500 mb-2">No ingredients selected yet</p>
       )}
     </div>
   );

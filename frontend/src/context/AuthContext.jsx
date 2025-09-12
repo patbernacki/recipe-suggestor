@@ -7,6 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savedRecipes, setSavedRecipes] = useState([]);
+  const [savedIngredients, setSavedIngredients] = useState([]);
+  const [logoutTrigger, setLogoutTrigger] = useState(0); // Add logout trigger for force refresh
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
@@ -15,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       fetchUserProfile(token);
       fetchSavedRecipes(token);
+      fetchSavedIngredients(token);
     } else {
       setLoading(false);
     }
@@ -46,9 +49,131 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchSavedIngredients = async (token) => {
+    try {
+      const response = await axios.get(`${baseUrl}/ingredients/saved`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSavedIngredients(response.data.ingredients || []);
+    } catch (error) {
+      console.error('Error fetching saved ingredients:', error.response?.data || error.message);
+      setSavedIngredients([]);
+    }
+  };
+
   const refreshSavedRecipes = () => {
     const token = localStorage.getItem('token');
     if (token) fetchSavedRecipes(token);
+  };
+
+  const saveIngredient = async (ingredientName) => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, error: 'Not authenticated' };
+
+    try {
+      await axios.post(`${baseUrl}/ingredients/save`, 
+        { ingredientName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      if (!savedIngredients.includes(ingredientName)) {
+        setSavedIngredients(prev => [...prev, ingredientName]);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to save ingredient'
+      };
+    }
+  };
+
+  const removeIngredient = async (ingredientName) => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, error: 'Not authenticated' };
+
+    try {
+      await axios.delete(`${baseUrl}/ingredients/remove`, {
+        data: { ingredientName },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setSavedIngredients(prev => prev.filter(name => name !== ingredientName));
+      
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to remove ingredient'
+      };
+    }
+  };
+
+  const saveMultipleIngredients = async (ingredients) => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, error: 'Not authenticated' };
+
+    try {
+      const response = await axios.post(`${baseUrl}/ingredients/save-multiple`, 
+        { ingredients },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state with new ingredients
+      const newIngredients = response.data.saved || [];
+      setSavedIngredients(prev => {
+        const existing = new Set(prev);
+        newIngredients.forEach(name => existing.add(name));
+        return Array.from(existing);
+      });
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to save ingredients'
+      };
+    }
+  };
+
+  const syncLocalStorageIngredients = async () => {
+    try {
+      // Get ingredients from localStorage
+      const localIngredients = localStorage.getItem('selectedIngredients');
+      if (!localIngredients) return; // No local ingredients to sync
+      
+      const ingredients = JSON.parse(localIngredients);
+      if (!Array.isArray(ingredients) || ingredients.length === 0) return;
+      
+      // Get current server ingredients to avoid duplicates
+      const serverIngredients = new Set(savedIngredients);
+      
+      // Filter out ingredients that are already on the server
+      const ingredientsToSync = ingredients.filter(ingredient => !serverIngredients.has(ingredient));
+      
+      if (ingredientsToSync.length === 0) {
+        console.log('All localStorage ingredients already exist on server');
+        return;
+      }
+      
+      console.log(`Syncing ${ingredientsToSync.length} ingredients from localStorage to server:`, ingredientsToSync);
+      
+      // Sync ingredients to server
+      const result = await saveMultipleIngredients(ingredientsToSync);
+      
+      if (result.success) {
+        console.log('Successfully synced localStorage ingredients to server');
+        // Clear localStorage ingredients after successful sync
+        localStorage.removeItem('selectedIngredients');
+      } else {
+        console.error('Failed to sync localStorage ingredients:', result.error);
+      }
+    } catch (error) {
+      console.error('Error syncing localStorage ingredients:', error);
+    }
   };
 
   const login = async (username, password) => {
@@ -61,6 +186,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       await fetchUserProfile(token);
       await fetchSavedRecipes(token);
+      await fetchSavedIngredients(token);
+      
+      // Auto-sync localStorage ingredients to server
+      await syncLocalStorageIngredients();
+      
       return { success: true };
     } catch (error) {
       return {
@@ -76,7 +206,10 @@ export const AuthProvider = ({ children }) => {
         username,
         password
       });
-      return { success: true };
+      
+      // After successful registration, automatically log the user in
+      const loginResult = await login(username, password);
+      return loginResult;
     } catch (error) {
       return {
         success: false,
@@ -87,8 +220,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('selectedIngredients'); // Clear localStorage ingredients on logout
     setUser(null);
     setSavedRecipes([]);
+    setSavedIngredients([]);
+    setLogoutTrigger(prev => prev + 1); // Trigger re-render
   };
 
   const value = {
@@ -98,7 +234,12 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     savedRecipes,
-    refreshSavedRecipes
+    refreshSavedRecipes,
+    savedIngredients,
+    saveIngredient,
+    removeIngredient,
+    saveMultipleIngredients,
+    logoutTrigger // Expose logout trigger for components that need to react to logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

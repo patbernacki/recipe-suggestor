@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 
 // Profile Route
 router.get('/profile', authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
   try {
     const user = await knex('users').where({ id: userId }).first();
     res.json({ id: user.id, username: user.username });

@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
 
 // Get all saved recipes for the authenticated user
 router.get('/saved', authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
   try {
     console.log('Fetching saved recipes for userId:', userId);
     const saved = await knex('saved_recipes')
@@ -78,7 +78,7 @@ router.get('/saved', authenticateToken, async (req, res) => {
 
 // Save a recipe for the authenticated user
 router.post('/save', authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
   const { recipe_id } = req.body;
 
   if (!recipe_id) {
@@ -119,7 +119,7 @@ router.get('/:id', async (req, res) => {
 
 // Remove a saved recipe by its saved_recipes table id
 router.delete('/saved/:id', authenticateToken, async (req, res) => {
-  const userId = req.user.userId;
+  const userId = req.user.id;
   const savedId = req.params.id;
   try {
     const deleted = await knex('saved_recipes')
