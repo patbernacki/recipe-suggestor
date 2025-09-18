@@ -49,41 +49,86 @@ const Home = () => {
     try {
       const currentOffset = isLoadMore ? offset : 0;
       const query = ingredients.length > 0 ? ingredients.join(',') : '';
-      let url = `${baseUrl}/recipes?${query ? `ingredients=${encodeURIComponent(query)}&` : ''}limit=${limit}&offset=${currentOffset}`;
       
-      if (selectedDishType) {
-        url += `&type=${encodeURIComponent(selectedDishType)}`;
-      }
-
-      // Create an AbortController for the timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      try {
-        const response = await fetch(url, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+      // If we have both ingredients and dish type, do combined search
+      if (ingredients.length > 0 && selectedDishType) {
+        // First search: ingredients + dish type
+        const ingredientsUrl = `${baseUrl}/recipes?ingredients=${encodeURIComponent(query)}&type=${encodeURIComponent(selectedDishType)}&limit=${limit}&offset=${currentOffset}`;
         
-        if (!response.ok) {
-          throw new Error(response.status === 504 ? 'Request timed out. Please try again.' : 'Failed to fetch recipes');
+        // Second search: dish type only (for fallback results)
+        const dishTypeUrl = `${baseUrl}/recipes?type=${encodeURIComponent(selectedDishType)}&limit=${limit}&offset=${currentOffset}`;
+        
+        try {
+          // Make both requests in parallel
+          const [ingredientsResponse, dishTypeResponse] = await Promise.all([
+            fetch(ingredientsUrl),
+            fetch(dishTypeUrl)
+          ]);
+          
+          if (!ingredientsResponse.ok || !dishTypeResponse.ok) {
+            throw new Error('Failed to fetch recipes');
+          }
+          
+          const [ingredientsData, dishTypeData] = await Promise.all([
+            ingredientsResponse.json(),
+            dishTypeResponse.json()
+          ]);
+          
+          // Combine results: ingredient matches first, then dish type matches
+          const ingredientMatches = ingredientsData.recipes || [];
+          const dishTypeMatches = (dishTypeData.recipes || []).filter(recipe => 
+            !ingredientMatches.some(ingredientRecipe => ingredientRecipe.id === recipe.id)
+          );
+          
+          const combinedRecipes = [...ingredientMatches, ...dishTypeMatches];
+          
+          if (isLoadMore) {
+            setRecipes(prev => [...prev, ...combinedRecipes]);
+          } else {
+            setRecipes(combinedRecipes);
+          }
+          
+          setOffset(currentOffset + limit);
+          setHasMore(ingredientsData.hasMore || dishTypeData.hasMore);
+          
+        } catch (err) {
+          throw new Error('Failed to fetch recipes');
+        }
+      } else {
+        // Standard single search
+        let url = `${baseUrl}/recipes?${query ? `ingredients=${encodeURIComponent(query)}&` : ''}limit=${limit}&offset=${currentOffset}`;
+        
+        if (selectedDishType) {
+          url += `&type=${encodeURIComponent(selectedDishType)}`;
         }
 
-        const data = await response.json();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        if (isLoadMore) {
-          setRecipes(prev => [...prev, ...data.recipes]);
-        } else {
-          setRecipes(data.recipes);
-        }
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(response.status === 504 ? 'Request timed out. Please try again.' : 'Failed to fetch recipes');
+          }
 
-        setOffset(currentOffset + limit);
-        setHasMore(data.hasMore);
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          throw new Error('Request timed out. Please try again.');
+          const data = await response.json();
+
+          if (isLoadMore) {
+            setRecipes(prev => [...prev, ...data.recipes]);
+          } else {
+            setRecipes(data.recipes);
+          }
+
+          setOffset(currentOffset + limit);
+          setHasMore(data.hasMore);
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            throw new Error('Request timed out. Please try again.');
+          }
+          throw err;
         }
-        throw err;
       }
     } catch (err) {
       setError(err.message);
@@ -111,9 +156,8 @@ const Home = () => {
       // Also update localStorage as backup
       localStorage.setItem('selectedIngredients', JSON.stringify(savedIngredients));
     } else if (user && savedIngredients.length === 0) {
-      // If user is logged in but has no saved ingredients, clear local ingredients
-      // This handles the case where localStorage was cleared after sync
-      setIngredients([]);
+      // If user is logged in but has no saved ingredients, keep current ingredients
+      // Don't clear them as user might be in the middle of building a list
     } else if (!user) {
       // If user is not logged in, load from localStorage (guest mode)
       const localIngredients = localStorage.getItem('selectedIngredients');
@@ -125,27 +169,22 @@ const Home = () => {
     }
   }, [user, savedIngredients, logoutTrigger]); // Add logoutTrigger as dependency
 
-  // Clear recipes when user logs out (only if ingredients are selected)
+  // Handle user login/logout
   useEffect(() => {
-    if (!user && ingredients.length > 0) {
-      setRecipes([]);
-      setError(null);
-      setOffset(0);
-      setHasMore(false);
-    } else if (!user && ingredients.length === 0) {
+    if (!user && ingredients.length === 0) {
       // If user logs out and no ingredients are selected, fetch default recipes
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, ingredients.length]); // fetchRecipes excluded to prevent infinite loop
+  }, [user]); // Only trigger on user login/logout, not ingredient changes
 
   // Auto-fetch when dish type changes (but not when ingredients change)
   useEffect(() => {
-    if (!isInitialMount.current && ingredients.length > 0) {
+    if (!isInitialMount.current) {
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDishType, ingredients.length]); // fetchRecipes excluded to prevent infinite loop
+  }, [selectedDishType]); // Only trigger on dish type changes
 
   // Initial search when component mounts (only if ingredients exist)
   useEffect(() => {
