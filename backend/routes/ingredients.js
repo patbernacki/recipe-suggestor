@@ -3,6 +3,7 @@ const axios = require('axios');
 const router = express.Router();
 const db = require('../db');
 const auth = require('../middleware/auth');
+const { COMMON_INGREDIENTS, getCategories, searchIngredients } = require('../data/common-ingredients');
 
 router.get('/search', async (req, res) => {
   const { query } = req.query;
@@ -148,6 +149,36 @@ router.post('/save-multiple', auth, async (req, res) => {
   } catch (error) {
     console.error('Error saving multiple ingredients:', error.message);
     res.status(500).json({ message: 'Failed to save ingredients' });
+  }
+});
+
+// Get common ingredients organized by categories
+router.get('/common', (req, res) => {
+  try {
+    res.json({
+      categories: getCategories(),
+      ingredients: COMMON_INGREDIENTS
+    });
+  } catch (error) {
+    console.error('Error fetching common ingredients:', error.message);
+    res.status(500).json({ message: 'Failed to fetch common ingredients' });
+  }
+});
+
+// Search common ingredients
+router.get('/common/search', (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.length < 1) {
+      return res.status(400).json({ message: 'Query is required' });
+    }
+    
+    const results = searchIngredients(query);
+    res.json({ results });
+  } catch (error) {
+    console.error('Error searching common ingredients:', error.message);
+    res.status(500).json({ message: 'Failed to search common ingredients' });
   }
 });
 
