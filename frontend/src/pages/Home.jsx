@@ -41,6 +41,7 @@ const Home = () => {
   });
   const limit = 20;
   const isInitialMount = useRef(true);
+  const lastIngredientsRef = useRef(ingredients);
 
   const fetchRecipes = useCallback(async (isLoadMore = false) => {
     setLoading(true);
@@ -195,6 +196,34 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingredients.length]); // fetchRecipes excluded to prevent infinite loop
 
+  // Auto-update recipes when ingredients change (with debouncing)
+  useEffect(() => {
+    // Skip auto-update on initial mount or when no ingredients
+    if (isInitialMount.current || ingredients.length === 0) {
+      lastIngredientsRef.current = ingredients;
+      return;
+    }
+
+    // Check if ingredients actually changed
+    const ingredientsChanged = JSON.stringify(ingredients) !== JSON.stringify(lastIngredientsRef.current);
+    if (!ingredientsChanged) {
+      return;
+    }
+
+    // Update the ref to track current ingredients
+    lastIngredientsRef.current = ingredients;
+
+    // Set up debounced auto-update
+    const timeoutId = setTimeout(() => {
+      setOffset(0); // Reset offset for new search
+      fetchRecipes(false);
+    }, 2000); // 2 second delay
+
+    // Cleanup timeout if ingredients change again before delay
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ingredients]); // Only depend on ingredients array, fetchRecipes excluded to prevent circular dependency
+
   const handleLoadMore = () => {
     fetchRecipes(true);
   };
@@ -254,24 +283,7 @@ const Home = () => {
                   disabled={loading}
                   onAddIngredient={user ? saveIngredient : undefined}
                   onRemoveIngredient={user ? removeIngredient : undefined}
-                  onSearchRecipes={() => {
-                    setOffset(0);
-                    fetchRecipes(false);
-                    // Close filters on mobile after search
-                    setShowFilters(false);
-                  }}
                 />
-                {error && (
-                  <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                    <p className="text-red-600">{error}</p>
-                    <button 
-                      onClick={() => setError(null)} 
-                      className="mt-2 text-sm text-red-600 hover:text-red-800"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -311,22 +323,7 @@ const Home = () => {
                 disabled={loading}
                 onAddIngredient={user ? saveIngredient : undefined}
                 onRemoveIngredient={user ? removeIngredient : undefined}
-                onSearchRecipes={() => {
-                  setOffset(0);
-                  fetchRecipes(false);
-                }}
               />
-              {error && (
-                <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <p className="text-red-600">{error}</p>
-                  <button 
-                    onClick={() => setError(null)} 
-                    className="mt-2 text-sm text-red-600 hover:text-red-800"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -335,6 +332,31 @@ const Home = () => {
         <div className="lg:col-span-8">
           <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow h-[calc(100vh-12rem)] flex flex-col">
             <h2 className="text-xl font-semibold mb-4 flex-shrink-0">Recipe Suggestions</h2>
+            
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200 flex-shrink-0">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm text-red-600">{error}</p>
+                    <div className="mt-2">
+                      <button 
+                        onClick={() => setError(null)} 
+                        className="text-sm text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="flex-1 overflow-y-auto space-y-6 pr-2">
               {recipes.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
