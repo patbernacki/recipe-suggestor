@@ -86,7 +86,7 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         key={ingredient}
         onClick={() => isSelected ? removeIngredient(ingredient) : addIngredient(ingredient)}
         disabled={disabled}
-        className={`px-2.5 py-1 text-sm rounded-md transition-colors ${
+        className={`px-2 sm:px-2.5 py-1 text-xs sm:text-sm rounded-md transition-colors ${
           isSelected
             ? 'bg-blue-100 text-blue-700 border border-blue-300'
             : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
@@ -123,7 +123,7 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         <button
           onClick={() => toggleCategory(category.key)}
           disabled={disabled}
-          className={`w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors ${
+          className={`w-full flex items-center justify-between p-2 sm:p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors ${
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
           } ${isExpanded ? 'border-blue-300 bg-blue-50' : ''}`}
         >
@@ -145,8 +145,8 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         </button>
         
         {isExpanded && (
-          <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex flex-wrap gap-1.5">
+          <div className="mt-2 p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
               {categoryIngredients.map(renderIngredientButton)}
             </div>
           </div>
@@ -183,10 +183,10 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Ingredients</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Common Ingredients</h3>
       
       {/* Categories */}
-      <div className="space-y-3">
+      <div className="space-y-3 pb-4">
         {categories.map(renderCategory)}
       </div>
     </div>

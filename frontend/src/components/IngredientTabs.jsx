@@ -193,7 +193,7 @@ const BrowseTab = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search ingredients..."
-            className={`w-full pl-9 pr-8 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+            className={`w-full pl-9 pr-8 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base ${
               disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
             }`}
             disabled={disabled}
@@ -223,13 +223,13 @@ const BrowseTab = ({
       {/* Search Results */}
       {showSearchResults && (commonSuggestions.length > 0 || suggestions.length > 0) && !disabled && (
         <div className="mb-4 border border-gray-200 rounded-lg bg-white max-h-64 overflow-y-auto">
-          <div className="p-3">
+          <div className="p-3 pb-4">
             <div className="flex flex-wrap gap-1.5">
               {commonSuggestions.map((item) => (
                 <button
                   key={item.name}
                   onClick={() => addIngredient(item.name)}
-                  className="px-2.5 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                  className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
                 >
                   {item.name}
                 </button>
@@ -238,7 +238,7 @@ const BrowseTab = ({
                 <button
                   key={item.name}
                   onClick={() => addIngredient(item.name)}
-                  className="px-2.5 py-1 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
+                  className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
                 >
                   {item.name}
                 </button>
@@ -303,15 +303,15 @@ const SelectedTab = ({
           </button>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 pb-4">
           {ingredients.map((item) => (
             <div
               key={item}
-              className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg border ${
+              className={`flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border ${
                 disabled ? 'opacity-75' : ''
               }`}
             >
-              <span className="text-gray-700">{item}</span>
+              <span className="text-gray-700 text-sm sm:text-base">{item}</span>
               <button
                 onClick={() => !disabled && removeIngredient(item)}
                 disabled={disabled}

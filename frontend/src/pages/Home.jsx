@@ -31,6 +31,20 @@ const Home = () => {
 
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showFilters) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showFilters]);
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -97,7 +111,11 @@ const Home = () => {
         }
       } else {
         // Standard single search
-        let url = `${baseUrl}/recipes?${query ? `ingredients=${encodeURIComponent(query)}&` : ''}limit=${limit}&offset=${currentOffset}`;
+        let url = `${baseUrl}/recipes?limit=${limit}&offset=${currentOffset}`;
+        
+        if (query) {
+          url += `&ingredients=${encodeURIComponent(query)}`;
+        }
         
         if (selectedDishType) {
           url += `&type=${encodeURIComponent(selectedDishType)}`;
@@ -198,8 +216,8 @@ const Home = () => {
 
   // Auto-update recipes when ingredients change (with debouncing)
   useEffect(() => {
-    // Skip auto-update on initial mount or when no ingredients
-    if (isInitialMount.current || ingredients.length === 0) {
+    // Skip auto-update on initial mount
+    if (isInitialMount.current) {
       lastIngredientsRef.current = ingredients;
       return;
     }
@@ -230,93 +248,84 @@ const Home = () => {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Mobile Filter Toggle Button */}
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      {/* Mobile Ingredient Selector Button */}
       <div className="lg:hidden mb-4">
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-all duration-200"
+        <button
+          onClick={() => setShowFilters(true)}
+          className="w-full p-4 bg-white rounded-lg shadow-md border border-gray-200 flex items-center justify-between hover:bg-gray-50 transition-all duration-200"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1">
+              <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="font-medium text-gray-900">Select Ingredients</span>
+            </div>
+            {ingredients.length > 0 && (
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                {ingredients.length}
+              </span>
+            )}
+          </div>
+          <svg
+            className="h-5 w-5 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <span className="font-medium text-gray-900">Filter Options</span>
-            <svg
-              className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          {/* Dropdown Content */}
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out border-t border-gray-100 ${
-            showFilters ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
-          }`}>
-            <div className="p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-900">Select Your Ingredients</h2>
-              <div className="space-y-4">
-                <div className="mb-4">
-                  <label htmlFor="dishType" className="block text-sm font-medium text-gray-700 mb-1">
-                    Filter by Dish Type
-                  </label>
-                  <select
-                    id="dishType"
-                    value={selectedDishType}
-                    onChange={(e) => {
-                      setSelectedDishType(e.target.value);
-                      setOffset(0);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    disabled={loading}
-                  >
-                    {DISH_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <IngredientSelector 
-                  ingredients={ingredients} 
-                  setIngredients={setIngredients} 
-                  disabled={loading}
-                  onAddIngredient={user ? saveIngredient : undefined}
-                  onRemoveIngredient={user ? removeIngredient : undefined}
-                />
-              </div>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Full-Screen Modal */}
+      {showFilters && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-white animate-in fade-in duration-200">
+          <div className="flex flex-col h-full">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">Select Your Ingredients</h2>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <svg className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <IngredientSelector 
+                ingredients={ingredients} 
+                setIngredients={setIngredients} 
+                disabled={loading}
+                onAddIngredient={user ? saveIngredient : undefined}
+                onRemoveIngredient={user ? removeIngredient : undefined}
+              />
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowFilters(false)}
+                className="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Done ({ingredients.length} ingredients selected)
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         {/* Left: Ingredient Selection - Desktop Only */}
         <div className="hidden lg:block lg:col-span-4">
           <div className="p-6 pr-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow h-[calc(100vh-12rem)]">
             <div className="pr-1 h-full overflow-y-auto">
               <h2 className="text-xl font-semibold mb-4">Select Your Ingredients</h2>
-              <div className="mb-4">
-                <label htmlFor="dishTypeDesktop" className="block text-sm font-medium text-gray-700 mb-1">
-                  Filter by Dish Type
-                </label>
-                <select
-                  id="dishTypeDesktop"
-                  value={selectedDishType}
-                  onChange={(e) => {
-                    setSelectedDishType(e.target.value);
-                    setOffset(0);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  disabled={loading}
-                >
-                  {DISH_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <IngredientSelector 
                 ingredients={ingredients} 
                 setIngredients={setIngredients} 
@@ -330,8 +339,31 @@ const Home = () => {
 
         {/* Right: Results */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow h-[calc(100vh-12rem)] flex flex-col">
-            <h2 className="text-xl font-semibold mb-4 flex-shrink-0">Recipe Suggestions</h2>
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)] flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 flex-shrink-0 gap-3 sm:gap-0">
+              <h2 className="text-lg sm:text-xl font-semibold">Recipe Suggestions</h2>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="dishTypeResults" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Filter:
+                </label>
+                <select
+                  id="dishTypeResults"
+                  value={selectedDishType}
+                  onChange={(e) => {
+                    setSelectedDishType(e.target.value);
+                    setOffset(0);
+                  }}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white min-w-0 flex-1 sm:flex-none"
+                  disabled={loading}
+                >
+                  {DISH_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             
             {/* Error Message */}
             {error && (

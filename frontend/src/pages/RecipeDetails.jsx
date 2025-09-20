@@ -27,7 +27,7 @@ const RecipeDetails = () => {
     fetchRecipeDetails();
   }, [id, location.state?.likes]);
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading) return <div className="p-4"></div>;
   if (!recipe) return <div className="p-4">Recipe not found.</div>;
 
   return (

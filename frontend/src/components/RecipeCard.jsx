@@ -82,16 +82,16 @@ const RecipeCard = ({ recipe, isSaved }) => {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-4 p-4">
+        <div className="flex flex-col lg:flex-row gap-4 p-3 sm:p-4">
           <img
             src={recipe.image}
             alt={recipe.title}
-            className="w-full lg:w-48 h-48 lg:h-auto object-cover rounded-xl"
+            className="w-full lg:w-48 h-40 sm:h-48 lg:h-auto object-cover rounded-xl"
           />
 
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-semibold">{recipe.title}</h3>
+            <div className="flex items-start justify-between mb-2 gap-2">
+              <h3 className="text-lg sm:text-xl font-semibold leading-tight">{recipe.title}</h3>
               <div className="flex items-center gap-2 text-green-600">
                 <div className="flex items-center gap-1">
                   <ThumbsUp fill="#9ca3af" color="#9ca3af" size={18} />
