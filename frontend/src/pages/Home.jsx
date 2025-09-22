@@ -58,6 +58,7 @@ const Home = () => {
   const lastIngredientsRef = useRef(ingredients);
 
   const fetchRecipes = useCallback(async (isLoadMore = false) => {
+    console.log('fetchRecipes called with ingredients:', ingredients, 'isLoadMore:', isLoadMore);
     setLoading(true);
     setError(null);
 
@@ -167,13 +168,14 @@ const Home = () => {
     localStorage.setItem('selectedDishType', selectedDishType);
   }, [selectedDishType]);
 
-  // Sync ingredients from database when user logs in
+  // Sync ingredients from database when user logs in (only on login, not on every savedIngredients change)
   useEffect(() => {
     if (user && savedIngredients.length > 0) {
-      // If user has saved ingredients in database, use those
-      setIngredients(savedIngredients);
-      // Also update localStorage as backup
-      localStorage.setItem('selectedIngredients', JSON.stringify(savedIngredients));
+      // Only sync if we don't already have ingredients (first login)
+      if (ingredients.length === 0) {
+        setIngredients(savedIngredients);
+        localStorage.setItem('selectedIngredients', JSON.stringify(savedIngredients));
+      }
     } else if (user && savedIngredients.length === 0) {
       // If user is logged in but has no saved ingredients, keep current ingredients
       // Don't clear them as user might be in the middle of building a list
@@ -186,7 +188,8 @@ const Home = () => {
         setIngredients([]);
       }
     }
-  }, [user, savedIngredients, logoutTrigger]); // Add logoutTrigger as dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, logoutTrigger]); // Only depend on user and logoutTrigger to prevent conflicts
 
   // Handle user login/logout
   useEffect(() => {
@@ -195,7 +198,7 @@ const Home = () => {
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]); // Only trigger on user login/logout, not ingredient changes
+  }, [user, ingredients.length]); // Remove fetchRecipes to prevent circular dependency
 
   // Auto-fetch when dish type changes (but not when ingredients change)
   useEffect(() => {
@@ -203,7 +206,7 @@ const Home = () => {
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDishType]); // Only trigger on dish type changes
+  }, [selectedDishType]); // Remove fetchRecipes to prevent circular dependency
 
   // Initial search when component mounts (only if ingredients exist)
   useEffect(() => {
@@ -212,9 +215,9 @@ const Home = () => {
       isInitialMount.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingredients.length]); // fetchRecipes excluded to prevent infinite loop
+  }, [ingredients.length]); // Remove fetchRecipes to prevent circular dependency
 
-  // Auto-update recipes when ingredients change (with debouncing)
+  // Auto-update recipes when ingredients change (with consistent 2-second debouncing)
   useEffect(() => {
     // Skip auto-update on initial mount
     if (isInitialMount.current) {
@@ -228,19 +231,22 @@ const Home = () => {
       return;
     }
 
+    // Debug logging
+    console.log('Ingredients changed, setting up debounced recipe fetch:', ingredients);
+
     // Update the ref to track current ingredients
     lastIngredientsRef.current = ingredients;
 
-    // Set up debounced auto-update
+    // Set up debounced auto-update with consistent 2-second delay for ALL users
     const timeoutId = setTimeout(() => {
       setOffset(0); // Reset offset for new search
       fetchRecipes(false);
-    }, 2000); // 2 second delay
+    }, 2000); // Consistent 2 second delay for all users
 
     // Cleanup timeout if ingredients change again before delay
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingredients]); // Only depend on ingredients array, fetchRecipes excluded to prevent circular dependency
+  }, [ingredients]); // Remove fetchRecipes to prevent circular dependency
 
   const handleLoadMore = () => {
     fetchRecipes(true);
@@ -301,7 +307,7 @@ const Home = () => {
               <IngredientSelector 
                 ingredients={ingredients} 
                 setIngredients={setIngredients} 
-                disabled={loading}
+                disabled={false}
                 onAddIngredient={user ? saveIngredient : undefined}
                 onRemoveIngredient={user ? removeIngredient : undefined}
               />
@@ -329,7 +335,7 @@ const Home = () => {
               <IngredientSelector 
                 ingredients={ingredients} 
                 setIngredients={setIngredients} 
-                disabled={loading}
+                disabled={false}
                 onAddIngredient={user ? saveIngredient : undefined}
                 onRemoveIngredient={user ? removeIngredient : undefined}
               />

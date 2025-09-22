@@ -125,7 +125,7 @@ const RecipeCard = ({ recipe, isSaved }) => {
                     <ul className="text-sm list-disc list-inside text-gray-600">
                       {displayedMissing.map((ing, index) => (
                         <li key={ing.id}>
-                          {ing.original}
+                          {ing.name}
                           {index === displayedMissing.length - 1 && hasExtraMissing && " and more..."}
                         </li>
                       ))}

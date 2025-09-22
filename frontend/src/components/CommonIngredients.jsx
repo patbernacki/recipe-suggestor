@@ -36,12 +36,15 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
 
   const addIngredient = async (ingredient) => {
     if (!ingredients.includes(ingredient)) {
+      console.log('Adding ingredient:', ingredient, 'Current ingredients:', ingredients);
       setIngredients([...ingredients, ingredient]);
       
       // If callback provided, use it (for database operations)
       if (onAddIngredient) {
         try {
+          console.log('Saving ingredient to database:', ingredient);
           await onAddIngredient(ingredient);
+          console.log('Successfully saved ingredient to database:', ingredient);
         } catch (error) {
           console.error('Error saving ingredient to database:', error);
           // Fallback: ingredient is already in local state
@@ -186,7 +189,7 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Common Ingredients</h3>
       
       {/* Categories */}
-      <div className="space-y-3 pb-4">
+      <div className="space-y-3">
         {categories.map(renderCategory)}
       </div>
     </div>
