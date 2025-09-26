@@ -41,28 +41,28 @@ const IngredientTabs = ({
   return (
     <div className="mb-6">
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-4">
+      <div className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('browse')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all duration-200 ${
             activeTab === 'browse'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600 bg-blue-50'
+              : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50'
           }`}
         >
           Browse & Search
         </button>
         <button
           onClick={() => setActiveTab('selected')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors relative ${
+          className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all duration-200 relative ${
             activeTab === 'selected'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-blue-500 text-blue-600 bg-blue-50'
+              : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50'
           }`}
         >
           Selected ({ingredients.length})
           {ingredients.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full"></span>
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-blue-500 rounded-full animate-pulse"></span>
           )}
         </button>
       </div>
@@ -148,6 +148,10 @@ const BrowseTab = ({
     }
   };
 
+  const isIngredientSelected = (ingredient) => {
+    return ingredients.includes(ingredient);
+  };
+
   const addIngredient = async (ingredient) => {
     if (!ingredients.includes(ingredient)) {
       setIngredients([...ingredients, ingredient]);
@@ -160,10 +164,19 @@ const BrowseTab = ({
         }
       }
     }
-    setQuery('');
-    setSuggestions([]);
-    setCommonSuggestions([]);
-    setShowSearchResults(false);
+    // Don't clear search results - keep them visible for multiple selections
+  };
+
+  const removeIngredient = async (ingredient) => {
+    setIngredients(ingredients.filter((i) => i !== ingredient));
+    
+    if (onRemoveIngredient) {
+      try {
+        await onRemoveIngredient(ingredient);
+      } catch (error) {
+        console.error('Error removing ingredient from database:', error);
+      }
+    }
   };
 
   // Debounce search
@@ -222,27 +235,41 @@ const BrowseTab = ({
 
       {/* Search Results */}
       {showSearchResults && (commonSuggestions.length > 0 || suggestions.length > 0) && !disabled && (
-        <div className="mb-4 border border-gray-200 rounded-lg bg-white max-h-64 overflow-y-auto">
-          <div className="p-3 pb-4">
-            <div className="flex flex-wrap gap-1.5">
-              {commonSuggestions.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => addIngredient(item.name)}
-                  className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
-                >
-                  {item.name}
-                </button>
-              ))}
-              {suggestions.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => addIngredient(item.name)}
-                  className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors"
-                >
-                  {item.name}
-                </button>
-              ))}
+        <div className="mb-6 border border-gray-200 rounded-xl bg-white max-h-64 overflow-y-auto shadow-sm">
+          <div className="p-4">
+            <div className="flex flex-wrap gap-2">
+              {commonSuggestions.map((item) => {
+                const isSelected = isIngredientSelected(item.name);
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => isSelected ? removeIngredient(item.name) : addIngredient(item.name)}
+                    className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-blue-500 text-white border border-blue-500 shadow-sm hover:bg-blue-600'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
+              {suggestions.map((item) => {
+                const isSelected = isIngredientSelected(item.name);
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => isSelected ? removeIngredient(item.name) : addIngredient(item.name)}
+                    className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-blue-500 text-white border border-blue-500 shadow-sm hover:bg-blue-600'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -250,8 +277,14 @@ const BrowseTab = ({
 
       {/* No Results Message */}
       {showSearchResults && commonSuggestions.length === 0 && suggestions.length === 0 && query.trim() && !loading && (
-        <div className="mb-4 p-2 text-sm text-gray-500 text-center">
-          No ingredients found for "{query}"
+        <div className="mb-6 p-4 text-center bg-gray-50 rounded-xl border border-gray-200">
+          <div className="text-gray-500 text-sm">
+            <svg className="h-8 w-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0118 12a8 8 0 10-8 8 7.962 7.962 0 01-2.291-.5" />
+            </svg>
+            <p className="font-medium">No ingredients found for "{query}"</p>
+            <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
+          </div>
         </div>
       )}
 
@@ -278,44 +311,45 @@ const SelectedTab = ({
 }) => {
   if (ingredients.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <div className="text-4xl mb-2">🥘</div>
-        <p className="text-sm">No ingredients selected yet</p>
-        <p className="text-xs text-gray-400 mt-1">Switch to the Browse tab to add ingredients</p>
+      <div className="text-center py-12 text-gray-500">
+        <div className="text-5xl mb-4">🥘</div>
+        <p className="text-base font-medium text-gray-600 mb-2">No ingredients selected yet</p>
+        <p className="text-sm text-gray-400">Switch to the Browse tab to add ingredients</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Selected Ingredients List */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-gray-700">
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-base font-semibold text-gray-800">
             {ingredients.length} ingredient{ingredients.length !== 1 ? 's' : ''} selected
           </h4>
           <button
             onClick={clearAllIngredients}
             disabled={disabled}
-            className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all duration-200 font-medium"
           >
             Clear all
           </button>
         </div>
         
-        <div className="space-y-2 pb-4">
+        <div className="space-y-2">
           {ingredients.map((item) => (
             <div
               key={item}
-              className={`flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg border ${
-                disabled ? 'opacity-75' : ''
+              className={`group flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 ${
+                disabled ? 'opacity-60' : 'hover:border-gray-300'
               }`}
             >
-              <span className="text-gray-700 text-sm sm:text-base">{item}</span>
+              <span className="text-gray-800 text-sm font-medium flex-1 pr-2">{item}</span>
               <button
                 onClick={() => !disabled && removeIngredient(item)}
                 disabled={disabled}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-all duration-200 group-hover:opacity-100"
+                title="Remove ingredient"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -327,12 +361,14 @@ const SelectedTab = ({
       </div>
 
       {/* Auto-update notice */}
-      <div className="text-center py-3 text-sm text-gray-500 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex items-center justify-center">
-          <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-center justify-center text-center">
+          <svg className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Recipes update automatically when you change ingredients
+          <span className="text-sm text-blue-700 font-medium">
+            Recipes update automatically when you change ingredients
+          </span>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 
-const RecipeCard = ({ recipe, isSaved }) => {
+const RecipeCard = ({ recipe, isSaved, onRecipeClick }) => {
   const maxMissingIngredientsToShow = 3;
   const displayedMissing = recipe.missedIngredients?.slice(0, maxMissingIngredientsToShow) || [];
   const hasExtraMissing = (recipe.missedIngredients?.length || 0) > maxMissingIngredientsToShow;
@@ -68,8 +68,13 @@ const RecipeCard = ({ recipe, isSaved }) => {
   };
 
   return (
-    <Link to={`/recipes/${recipe.id}`} state={{ likes: recipe.likes }} className="block">
-      <div className="bg-white rounded-2xl overflow-hidden shadow transition-shadow duration-200 hover:shadow-lg relative">
+    <Link 
+      to={`/recipes/${recipe.id}`} 
+      state={{ likes: recipe.likes }} 
+      className="block"
+      onClick={onRecipeClick}
+    >
+      <div className="bg-white rounded-xl overflow-hidden shadow-md transition-all duration-200 hover:shadow-xl relative group">
         {/* Login Required Message */}
         {showLoginMessage && (
           <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-10 animate-fade-in">
@@ -82,63 +87,67 @@ const RecipeCard = ({ recipe, isSaved }) => {
           </div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-4 p-3 sm:p-4">
-          <img
-            src={recipe.image}
-            alt={recipe.title}
-            className="w-full lg:w-48 h-40 sm:h-48 lg:h-auto object-cover rounded-xl"
-          />
+        <div className="flex flex-col lg:flex-row gap-4 p-4">
+          <div className="relative">
+            <img
+              src={recipe.image}
+              alt={recipe.title}
+              className="w-full lg:w-48 h-40 sm:h-48 lg:h-auto object-cover rounded-lg"
+            />
+            {/* Likes overlay */}
+            <div className="absolute top-3 left-3 bg-black/70 text-white px-2 py-1 rounded-lg flex items-center gap-1 text-sm font-medium">
+              <ThumbsUp fill="currentColor" color="currentColor" size={14} />
+              <span>{recipe.likes || recipe.aggregateLikes || 0}</span>
+            </div>
+          </div>
 
           <div className="flex-1">
-            <div className="flex items-start justify-between mb-2 gap-2">
-              <h3 className="text-lg sm:text-xl font-semibold leading-tight">{recipe.title}</h3>
-              <div className="flex items-center gap-2 text-green-600">
-                <div className="flex items-center gap-1">
-                  <ThumbsUp fill="#9ca3af" color="#9ca3af" size={18} />
-                  <span className="text-sm font-medium text-gray-400">{recipe.likes || recipe.aggregateLikes || 0}</span>
-                </div>
-                <button
-                  type="button"
-                  className={`ml-2 p-1 rounded-full hover:bg-green-100 transition`}
-                  onClick={handleSave}
-                  disabled={saving}
-                  title={user ? (saved ? 'Unsave recipe' : 'Save recipe') : 'Login to save'}
-                >
-                  <Star fill={saved ? '#22c55e' : 'none'} color="#22c55e" size={20} />
-                </button>
-              </div>
+            <div className="flex items-start justify-between mb-3 gap-2">
+              <h3 className="text-lg sm:text-xl font-semibold leading-tight text-gray-900">{recipe.title}</h3>
+              <button
+                type="button"
+                className={`p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 ${
+                  saved ? 'text-green-600 bg-green-50' : 'text-gray-400 hover:text-green-600'
+                }`}
+                onClick={handleSave}
+                disabled={saving}
+                title={user ? (saved ? 'Unsave recipe' : 'Save recipe') : 'Login to save'}
+              >
+                <Star fill={saved ? '#22c55e' : 'none'} color={saved ? '#22c55e' : '#9ca3af'} size={20} />
+              </button>
             </div>
 
             {recipe.usedIngredientCount !== undefined ? (
               <>
-                <p className="text-sm text-gray-700 mb-2">
-                  You have <strong>{recipe.usedIngredientCount}</strong>{' '}
+                <p className="text-sm text-gray-700 mb-3">
+                  You have <strong className="text-blue-600">{recipe.usedIngredientCount}</strong>{' '}
                   {recipe.usedIngredientCount === 1 ? 'ingredient' : 'ingredients'}.
                 </p>
 
                 {recipe.missedIngredientCount > 0 ? (
                   <>
-                    <p className="text-sm text-red-600 mb-2">
+                    <p className="text-sm text-red-600 mb-2 font-medium">
                       Missing <strong>{recipe.missedIngredientCount}</strong>{' '}
                       {recipe.missedIngredientCount === 1 ? 'ingredient' : 'ingredients'}:
                     </p>
-                    <ul className="text-sm list-disc list-inside text-gray-600">
+                    <div className="flex flex-wrap gap-1.5">
                       {displayedMissing.map((ing, index) => (
-                        <li key={ing.id}>
+                        <span key={ing.id} className="text-xs bg-red-50 text-red-700 px-2.5 py-1.5 rounded-md border border-red-200 font-medium">
                           {ing.name}
-                          {index === displayedMissing.length - 1 && hasExtraMissing && " and more..."}
-                        </li>
+                          {index === displayedMissing.length - 1 && hasExtraMissing && " +more"}
+                        </span>
                       ))}
-                    </ul>
+                    </div>
                   </>
                 ) : (
-                  <p className="text-sm text-green-600 mb-2">
-                    🎉 You have all the ingredients!
-                  </p>
+                  <div className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200 w-fit">
+                    <span>🎉</span>
+                    <span className="font-medium">You have all the ingredients!</span>
+                  </div>
                 )}
               </>
             ) : (
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600">
                 Click to view recipe details and ingredients.
               </p>
             )}

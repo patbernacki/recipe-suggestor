@@ -28,6 +28,43 @@ const Home = () => {
   });
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cache, setCache] = useState(() => {
+    // Load cache from localStorage on component mount
+    const savedCache = localStorage.getItem('recipeCache');
+    if (savedCache) {
+      try {
+        const parsedCache = JSON.parse(savedCache);
+        // Check for expired cache entries (older than 1 hour)
+        const now = Date.now();
+        const filteredCache = {};
+        Object.keys(parsedCache).forEach(key => {
+          if (parsedCache[key].timestamp && (now - parsedCache[key].timestamp) < 3600000) { // 1 hour in milliseconds
+            filteredCache[key] = parsedCache[key];
+          }
+        });
+        return filteredCache;
+      } catch (error) {
+        console.error('Error parsing cache from localStorage:', error);
+        return {};
+      }
+    }
+    return {};
+  }); // Cache for recipe results
+  const [scrollPosition, setScrollPosition] = useState(() => {
+    // Load scroll position from localStorage on component mount
+    const savedScroll = localStorage.getItem('recipeScrollPosition');
+    return savedScroll ? parseInt(savedScroll) : 0;
+  }); // Track scroll position
+  const [hadExpandedResults, setHadExpandedResults] = useState(() => {
+    // Check if user had expanded results (loaded more recipes)
+    const saved = localStorage.getItem('hadExpandedResults');
+    return saved === 'true';
+  }); // Track if user had loaded more recipes
+  const [savedRecipeList, setSavedRecipeList] = useState(() => {
+    // Load saved recipe list from localStorage
+    const saved = localStorage.getItem('savedRecipeList');
+    return saved ? JSON.parse(saved) : null;
+  }); // Store complete recipe list when user loads more
 
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -57,8 +94,97 @@ const Home = () => {
   const isInitialMount = useRef(true);
   const lastIngredientsRef = useRef(ingredients);
 
+  // Function to save cache to localStorage
+  const saveCacheToStorage = (newCache) => {
+    try {
+      localStorage.setItem('recipeCache', JSON.stringify(newCache));
+    } catch (error) {
+      console.error('Error saving cache to localStorage:', error);
+    }
+  };
+
+  // Save scroll position when navigating away (only when clicking on a recipe)
+  const saveScrollPosition = () => {
+    const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+    if (scrollContainer) {
+      const currentScroll = scrollContainer.scrollTop;
+      console.log('Saving scroll position:', currentScroll);
+      setScrollPosition(currentScroll);
+      // Also save to localStorage for persistence
+      localStorage.setItem('recipeScrollPosition', currentScroll.toString());
+    }
+  };
+
+
+
   const fetchRecipes = useCallback(async (isLoadMore = false) => {
     console.log('fetchRecipes called with ingredients:', ingredients, 'isLoadMore:', isLoadMore);
+    
+    // Create cache key
+    const cacheKey = `${ingredients.join(',')}-${selectedDishType}`;
+    console.log('Cache key:', cacheKey);
+    console.log('Current cache:', cache);
+    
+    // Check if we have a saved complete recipe list (from load more scenario)
+    if (!isLoadMore && savedRecipeList && hadExpandedResults) {
+      console.log('Restoring saved recipe list with expanded results');
+      setRecipes(savedRecipeList.recipes);
+      setOffset(savedRecipeList.offset);
+      setHasMore(savedRecipeList.hasMore);
+      setLoading(false);
+      // Don't clear the saved data yet - keep it for subsequent navigations
+      // Only clear scroll position after restoring
+      setTimeout(() => {
+        const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+        if (scrollContainer && scrollPosition > 0) {
+          console.log('Restoring scroll position:', scrollPosition);
+          scrollContainer.scrollTop = scrollPosition;
+          setScrollPosition(0);
+          localStorage.removeItem('recipeScrollPosition');
+        }
+      }, 200);
+      return;
+    }
+    
+    // Check cache first (only for initial loads, not load more)
+    // Skip cache if user had expanded results (loaded more recipes)
+    if (!isLoadMore && cache[cacheKey] && !hadExpandedResults) {
+      const cachedData = cache[cacheKey];
+      // Check if cache is still valid (less than 1 hour old)
+      const now = Date.now();
+      if (cachedData.timestamp && (now - cachedData.timestamp) < 3600000) {
+        console.log('Using cached results for:', cacheKey);
+        setRecipes(cachedData.recipes);
+        setOffset(cachedData.offset);
+        setHasMore(cachedData.hasMore);
+        setLoading(false);
+        // Restore scroll position after a brief delay to ensure DOM is ready
+        setTimeout(() => {
+          const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+          if (scrollContainer && scrollPosition > 0) {
+            console.log('Restoring scroll position:', scrollPosition);
+            scrollContainer.scrollTop = scrollPosition;
+            // Clear the saved position after restoring to prevent re-restoration
+            setScrollPosition(0);
+            localStorage.removeItem('recipeScrollPosition');
+          }
+        }, 200);
+        return;
+      } else {
+        console.log('Cache expired for:', cacheKey);
+        // Remove expired cache entry
+        const newCache = { ...cache };
+        delete newCache[cacheKey];
+        setCache(newCache);
+        saveCacheToStorage(newCache);
+      }
+    } else if (hadExpandedResults) {
+      console.log('Skipping cache because user had expanded results');
+      // Don't clear the expanded results flag here - keep it for saved recipe list restoration
+    }
+    
+    console.log('Cache miss, fetching fresh data');
+
     setLoading(true);
     setError(null);
 
@@ -102,6 +228,20 @@ const Home = () => {
             setRecipes(prev => [...prev, ...combinedRecipes]);
           } else {
             setRecipes(combinedRecipes);
+            // Cache the results
+            const cacheData = {
+              recipes: combinedRecipes,
+              offset: currentOffset + limit,
+              hasMore: ingredientsData.hasMore || dishTypeData.hasMore,
+              timestamp: Date.now()
+            };
+            console.log('Caching results for key:', cacheKey, cacheData);
+            const newCache = {
+              ...cache,
+              [cacheKey]: cacheData
+            };
+            setCache(newCache);
+            saveCacheToStorage(newCache);
           }
           
           setOffset(currentOffset + limit);
@@ -139,6 +279,20 @@ const Home = () => {
             setRecipes(prev => [...prev, ...data.recipes]);
           } else {
             setRecipes(data.recipes);
+            // Cache the results
+            const cacheData = {
+              recipes: data.recipes,
+              offset: currentOffset + limit,
+              hasMore: data.hasMore,
+              timestamp: Date.now()
+            };
+            console.log('Caching results for key:', cacheKey, cacheData);
+            const newCache = {
+              ...cache,
+              [cacheKey]: cacheData
+            };
+            setCache(newCache);
+            saveCacheToStorage(newCache);
           }
 
           setOffset(currentOffset + limit);
@@ -156,7 +310,7 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, ingredients, selectedDishType, offset, limit]);
+  }, [baseUrl, ingredients, selectedDishType, offset, limit, cache, scrollPosition, hadExpandedResults, savedRecipeList]); // Include all dependencies for proper tracking
 
   // Save ingredients to localStorage whenever they change
   useEffect(() => {
@@ -203,6 +357,9 @@ const Home = () => {
   // Auto-fetch when dish type changes (but not when ingredients change)
   useEffect(() => {
     if (!isInitialMount.current) {
+      setScrollPosition(0); // Reset scroll position for new dish type
+      clearSavedData(); // Clear all saved data for new search
+      localStorage.removeItem('recipeScrollPosition'); // Clear saved scroll position
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -240,6 +397,9 @@ const Home = () => {
     // Set up debounced auto-update with consistent 2-second delay for ALL users
     const timeoutId = setTimeout(() => {
       setOffset(0); // Reset offset for new search
+      setScrollPosition(0); // Reset scroll position for new search
+      clearSavedData(); // Clear all saved data for new search
+      localStorage.removeItem('recipeScrollPosition'); // Clear saved scroll position
       fetchRecipes(false);
     }, 2000); // Consistent 2 second delay for all users
 
@@ -248,8 +408,58 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingredients]); // Remove fetchRecipes to prevent circular dependency
 
+  // Restore scroll position when recipes are loaded (only if we have a saved position)
+  useEffect(() => {
+    if (recipes.length > 0 && scrollPosition > 0) {
+      // Small delay to ensure DOM is ready
+      const timeoutId = setTimeout(() => {
+        const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+        if (scrollContainer) {
+          console.log('Restoring scroll position after recipes loaded:', scrollPosition);
+          scrollContainer.scrollTop = scrollPosition;
+          // Clear the saved position after restoring to prevent re-restoration
+          setScrollPosition(0);
+          localStorage.removeItem('recipeScrollPosition');
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [recipes.length, scrollPosition]);
+
+
   const handleLoadMore = () => {
+    // Mark that user has expanded results (loaded more recipes)
+    setHadExpandedResults(true);
+    localStorage.setItem('hadExpandedResults', 'true');
     fetchRecipes(true);
+  };
+
+  // Save complete recipe list whenever it changes (for all load more scenarios)
+  useEffect(() => {
+    if (recipes.length > 0 && hadExpandedResults) {
+      const recipeListData = {
+        recipes: recipes,
+        offset: offset,
+        hasMore: hasMore,
+        timestamp: Date.now()
+      };
+      setSavedRecipeList(recipeListData);
+      localStorage.setItem('savedRecipeList', JSON.stringify(recipeListData));
+    }
+  }, [recipes, offset, hasMore, hadExpandedResults]);
+
+  // Clear saved recipe list only when starting a completely new search
+  const clearSavedData = () => {
+    setSavedRecipeList(null);
+    setHadExpandedResults(false);
+    localStorage.removeItem('savedRecipeList');
+    localStorage.removeItem('hadExpandedResults');
+  };
+
+  // Save scroll position before navigation
+  const handleRecipeClick = () => {
+    saveScrollPosition();
   };
 
 
@@ -346,9 +556,9 @@ const Home = () => {
         {/* Right: Results */}
         <div className="lg:col-span-8">
           <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)] flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 flex-shrink-0 gap-3 sm:gap-0">
-              <h2 className="text-lg sm:text-xl font-semibold">Recipe Suggestions</h2>
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 flex-shrink-0 gap-3 sm:gap-0">
+              <h2 className="text-xl font-semibold text-gray-900">Recipe Suggestions</h2>
+              <div className="flex items-center space-x-3">
                 <label htmlFor="dishTypeResults" className="text-sm font-medium text-gray-700 whitespace-nowrap">
                   Filter:
                 </label>
@@ -359,7 +569,7 @@ const Home = () => {
                     setSelectedDishType(e.target.value);
                     setOffset(0);
                   }}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white min-w-0 flex-1 sm:flex-none"
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-0 flex-1 sm:flex-none shadow-sm hover:border-gray-400 transition-colors"
                   disabled={loading}
                 >
                   {DISH_TYPES.map((type) => (
@@ -397,31 +607,38 @@ const Home = () => {
             
             <div className="flex-1 overflow-y-auto space-y-6 pr-2">
               {recipes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-12">
                   {loading ? (
                     <div className="flex flex-col items-center">
-                      <svg className="animate-spin h-8 w-8 text-green-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      <p>Searching for recipes...</p>
+                      <p className="text-lg font-medium text-gray-700">Searching for recipes...</p>
+                      <p className="text-sm text-gray-500 mt-1">Finding the best matches for your ingredients</p>
                     </div>
                   ) : (
-                    <p>Select ingredients and click "Find Recipes" to discover recipes!</p>
+                    <div className="flex flex-col items-center">
+                      <div className="text-6xl mb-4">🍽️</div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to discover recipes?</h3>
+                      <p className="text-gray-600 max-w-md">
+                        Select some ingredients from the left panel to get personalized recipe suggestions!
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (
-                <RecipeResults recipes={recipes} />
+                <RecipeResults recipes={recipes} onRecipeClick={handleRecipeClick} />
               )}
               {hasMore && (
                 <div className="mt-8 pb-4 flex-shrink-0">
                   <button
-                    className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all transform hover:scale-[1.02] shadow-md relative"
+                    className="w-full px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl relative font-medium"
                     onClick={handleLoadMore}
                     disabled={loading}
                   >
                     <span className={loading ? 'opacity-0' : ''}>
-                      Load More
+                      Load More Recipes
                     </span>
                     {loading && (
                       <div className="absolute inset-0 flex items-center justify-center">

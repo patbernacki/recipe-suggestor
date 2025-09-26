@@ -1,7 +1,7 @@
 import RecipeCard from './RecipeCard';
 import { useAuth } from '../context/AuthContext';
 
-const RecipeResults = ({ recipes }) => {
+const RecipeResults = ({ recipes, onRecipeClick }) => {
   const { savedRecipes } = useAuth();
   const savedRecipeIds = new Set(savedRecipes.map(r => r.recipe_id));
 
@@ -13,7 +13,12 @@ const RecipeResults = ({ recipes }) => {
     <section >
       <div className="space-y-4">
         {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} isSaved={savedRecipeIds.has(String(recipe.id))} />
+          <RecipeCard 
+            key={recipe.id} 
+            recipe={recipe} 
+            isSaved={savedRecipeIds.has(String(recipe.id))} 
+            onRecipeClick={onRecipeClick}
+          />
         ))}
       </div>
     </section>

@@ -89,10 +89,10 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         key={ingredient}
         onClick={() => isSelected ? removeIngredient(ingredient) : addIngredient(ingredient)}
         disabled={disabled}
-        className={`px-2 sm:px-2.5 py-1 text-xs sm:text-sm rounded-md transition-colors ${
+        className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 ${
           isSelected
-            ? 'bg-blue-100 text-blue-700 border border-blue-300'
-            : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
+            ? 'bg-blue-500 text-white border border-blue-500 shadow-sm hover:bg-blue-600'
+            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         {ingredient}
@@ -122,21 +122,21 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
     const categoryIngredients = commonIngredients[category.key] || [];
     
     return (
-      <div key={category.key} className="mb-3">
+      <div key={category.key} className="mb-4">
         <button
           onClick={() => toggleCategory(category.key)}
           disabled={disabled}
-          className={`w-full flex items-center justify-between p-2 sm:p-3 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors ${
+          className={`w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md ${
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          } ${isExpanded ? 'border-blue-300 bg-blue-50' : ''}`}
+          } ${isExpanded ? 'border-blue-300 bg-blue-50 shadow-md' : ''}`}
         >
           <div className="flex items-center">
-            <span className="text-lg mr-2">{getCategoryIcon(category.key)}</span>
-            <span className="font-medium text-gray-900">{category.name}</span>
-            <span className="ml-2 text-sm text-gray-500">({category.count})</span>
+            <span className="text-xl mr-3">{getCategoryIcon(category.key)}</span>
+            <span className="font-semibold text-gray-900">{category.name}</span>
+            <span className="ml-3 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{category.count}</span>
           </div>
           <svg
-            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+            className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
               isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -148,8 +148,8 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         </button>
         
         {isExpanded && (
-          <div className="mt-2 p-2 sm:p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex flex-wrap gap-1 sm:gap-1.5">
+          <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="flex flex-wrap gap-2">
               {categoryIngredients.map(renderIngredientButton)}
             </div>
           </div>
@@ -161,7 +161,6 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
   if (loading) {
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Browse Ingredients</h3>
         <div className="flex items-center justify-center py-6">
           <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -176,7 +175,6 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
   if (error) {
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Browse Ingredients</h3>
         <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm text-gray-600">{error}</p>
         </div>
@@ -186,10 +184,8 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Browse Common Ingredients</h3>
-      
       {/* Categories */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {categories.map(renderCategory)}
       </div>
     </div>
