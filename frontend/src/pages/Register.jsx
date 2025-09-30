@@ -37,13 +37,13 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8 justify-center pb-40">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 food-pattern flex flex-col py-12 sm:px-6 lg:px-8 justify-center pb-40">
       <Link
         to="/"
-        className="absolute top-8 left-8 flex items-center text-gray-900 hover:text-green-600 transition-colors"
+        className="absolute top-8 left-8 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
       >
         <svg
-          className="h-6 w-6 mr-2"
+          className="h-4 w-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -55,19 +55,19 @@ const Register = () => {
             d="M10 19l-7-7m0 0l7-7m-7 7h18"
           />
         </svg>
-        <span className="text-lg font-semibold">Recipe Finder</span>
+        Back to Recipes
       </Link>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="py-8 px-4 sm:bg-white sm:shadow sm:rounded-lg sm:px-10">
+        <div className="py-8 px-4 sm:bg-white sm:shadow-lg sm:rounded-lg sm:px-10 border border-orange-100">
 
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="text-center text-3xl font-extrabold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               Create your account
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
               Or{' '}
-              <Link to="/login" className="font-medium text-green-600 hover:text-green-500">
+              <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
                 sign in to your existing account
               </Link>
             </p>
@@ -92,7 +92,7 @@ const Register = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  className="appearance-none block w-full px-3 py-2 border border-orange-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
               </div>
             </div>
@@ -109,7 +109,7 @@ const Register = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-orange-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -137,7 +137,7 @@ const Register = () => {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-orange-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -156,7 +156,7 @@ const Register = () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 Create Account
               </button>

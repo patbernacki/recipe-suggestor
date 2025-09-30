@@ -31,27 +31,27 @@ const RecipeDetails = () => {
   if (!recipe) return <div className="p-4">Recipe not found.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 food-pattern">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="mb-8 flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 group"
+          className="mb-8 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
         >
           <svg
-            className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200"
+            className="h-4 w-4"
             fill="none"
-            stroke="currentColor"
             viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M15 19l-7-7 7-7"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span className="font-medium">Back to Recipes</span>
+          Back to Recipes
         </button>
 
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -128,9 +128,9 @@ const RecipeDetails = () => {
                       .filter((line) => line.trim().length > 0);
                     
                     return steps.map((step, index) => (
-                      <div key={index} className={`flex gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 rounded-xl border border-blue-200 ${steps.length === 1 ? 'justify-center' : ''}`}>
+                      <div key={index} className={`flex gap-3 sm:gap-4 p-3 sm:p-4 bg-orange-50 rounded-xl border border-orange-200 ${steps.length === 1 ? 'justify-center' : ''}`}>
                         {steps.length > 1 && (
-                          <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm">
+                          <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm">
                             {index + 1}
                           </div>
                         )}
@@ -154,7 +154,7 @@ const RecipeDetails = () => {
                 href={recipe.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200 font-medium text-sm sm:text-base w-full sm:w-auto justify-center"
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-medium text-sm sm:text-base w-full sm:w-auto justify-center shadow-md hover:shadow-lg"
               >
                 <span>🔗</span>
                 View Full Recipe

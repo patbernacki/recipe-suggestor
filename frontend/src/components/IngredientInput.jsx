@@ -29,7 +29,7 @@ function IngredientInput({ ingredients, setIngredients }) {
       />
       <button
         onClick={handleAddIngredient}
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 rounded hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
       >
         Add
       </button>

@@ -91,7 +91,7 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
         disabled={disabled}
         className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 ${
           isSelected
-            ? 'bg-blue-500 text-white border border-blue-500 shadow-sm hover:bg-blue-600'
+            ? 'bg-teal-500 text-white border border-teal-500 shadow-sm hover:bg-teal-600'
             : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
@@ -128,7 +128,7 @@ const CommonIngredients = ({ ingredients, setIngredients, disabled, onAddIngredi
           disabled={disabled}
           className={`w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md ${
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          } ${isExpanded ? 'border-blue-300 bg-blue-50 shadow-md' : ''}`}
+          } ${isExpanded ? 'border-orange-300 bg-orange-50 shadow-md' : ''}`}
         >
           <div className="flex items-center">
             <span className="text-xl mr-3">{getCategoryIcon(category.key)}</span>

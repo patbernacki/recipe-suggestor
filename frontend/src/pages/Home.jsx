@@ -469,17 +469,17 @@ const Home = () => {
       <div className="lg:hidden mb-4">
         <button
           onClick={() => setShowFilters(true)}
-          className="w-full p-4 bg-white rounded-lg shadow-md border border-gray-200 flex items-center justify-between hover:bg-gray-50 transition-all duration-200"
+          className="w-full p-4 bg-white rounded-lg shadow-md border border-orange-200 flex items-center justify-between hover:bg-orange-50 transition-all duration-200"
         >
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-1">
-              <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               <span className="font-medium text-gray-900">Select Ingredients</span>
             </div>
             {ingredients.length > 0 && (
-              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+              <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
                 {ingredients.length}
               </span>
             )}
@@ -527,7 +527,7 @@ const Home = () => {
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={() => setShowFilters(false)}
-                className="w-full py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+                className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 Done ({ingredients.length} ingredients selected)
               </button>
@@ -539,7 +539,7 @@ const Home = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         {/* Left: Ingredient Selection - Desktop Only */}
         <div className="hidden lg:block lg:col-span-4">
-          <div className="p-6 pr-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow h-[calc(100vh-12rem)]">
+            <div className="p-6 pr-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow h-[calc(100vh-12rem)] border border-orange-100">
             <div className="pr-1 h-full overflow-y-auto">
               <h2 className="text-xl font-semibold mb-4">Select Your Ingredients</h2>
               <IngredientSelector 
@@ -555,7 +555,7 @@ const Home = () => {
 
         {/* Right: Results */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)] flex flex-col">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)] flex flex-col border border-orange-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 flex-shrink-0 gap-3 sm:gap-0">
               <h2 className="text-xl font-semibold text-gray-900">Recipe Suggestions</h2>
               <div className="flex items-center space-x-3">
@@ -569,7 +569,7 @@ const Home = () => {
                     setSelectedDishType(e.target.value);
                     setOffset(0);
                   }}
-                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-0 flex-1 sm:flex-none shadow-sm hover:border-gray-400 transition-colors"
+                  className="px-4 py-2 text-sm border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white min-w-0 flex-1 sm:flex-none shadow-sm hover:border-orange-400 transition-colors"
                   disabled={loading}
                 >
                   {DISH_TYPES.map((type) => (
@@ -610,7 +610,7 @@ const Home = () => {
                 <div className="text-center py-12">
                   {loading ? (
                     <div className="flex flex-col items-center">
-                      <svg className="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-10 w-10 text-orange-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -619,11 +619,18 @@ const Home = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <div className="text-6xl mb-4">🍽️</div>
+                      <div className="text-6xl mb-4 animate-bounce">🍽️</div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">Ready to discover recipes?</h3>
                       <p className="text-gray-600 max-w-md">
                         Select some ingredients from the left panel to get personalized recipe suggestions!
                       </p>
+                      <div className="mt-4 flex space-x-2">
+                        <span className="text-2xl">🥕</span>
+                        <span className="text-2xl">🍅</span>
+                        <span className="text-2xl">🧄</span>
+                        <span className="text-2xl">🥔</span>
+                        <span className="text-2xl">🧅</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -633,7 +640,7 @@ const Home = () => {
               {hasMore && (
                 <div className="mt-8 pb-4 flex-shrink-0">
                   <button
-                    className="w-full px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl relative font-medium"
+                    className="w-full px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-lg hover:shadow-xl relative font-medium"
                     onClick={handleLoadMore}
                     disabled={loading}
                   >

@@ -13,7 +13,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 food-pattern">
         {!isAuthPage && <Navbar />}
         <Routes>
           <Route path="/" element={<Home />} />
