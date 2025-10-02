@@ -24,7 +24,7 @@ db.migrate.latest()
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://recipe-suggestor-chi.vercel.app'  // Update with your actual Vercel URL
+    'https://recipe-suggestor-chi.vercel.app/'  // Update with your actual Vercel URL
   ],
   credentials: true
 }));
