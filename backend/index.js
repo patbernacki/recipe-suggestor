@@ -1,12 +1,33 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const app = express();
-const PORT = process.env.PORT || 5000;
+const knex = require('knex');
+const knexConfig = require('./knexfile');
 
 dotenv.config();
 
-app.use(cors());
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Database connection
+const db = knex(knexConfig.production);
+
+// Run migrations on startup
+db.migrate.latest()
+  .then(() => {
+    console.log('Migrations completed');
+  })
+  .catch(err => {
+    console.error('Migration error:', err);
+  });
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://recipe-suggestor-chi.vercel.app/'  // Update with your actual Vercel URL
+  ],
+  credentials: true
+}));
 
 // Middleware
 app.use(express.json());
@@ -15,11 +36,11 @@ app.use(express.json());
 const authRouter = require('./routes/auth');
 const recipesRouter = require('./routes/recipes');
 const ingredientRoutes = require('./routes/ingredients');
-app.use('/auth', authRouter); // All auth-related routes will now be under /auth
-app.use('/recipes', recipesRouter); // Ensure this is included
-app.use('/ingredients', ingredientRoutes)
+app.use('/auth', authRouter);
+app.use('/recipes', recipesRouter);
+app.use('/ingredients', ingredientRoutes);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
