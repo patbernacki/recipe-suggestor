@@ -95,8 +95,7 @@ const RecipeDetails = () => {
 
             {/* Ingredients Section */}
             <div className="mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🧾</span>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Ingredients
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
@@ -115,8 +114,7 @@ const RecipeDetails = () => {
 
             {/* Instructions Section */}
             <div className="mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">📝</span>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Instructions
               </h2>
               <div className="space-y-3 sm:space-y-4">
@@ -156,7 +154,6 @@ const RecipeDetails = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-medium text-sm sm:text-base w-full sm:w-auto justify-center shadow-md hover:shadow-lg"
               >
-                <span>🔗</span>
                 View Full Recipe
               </a>
             </div>

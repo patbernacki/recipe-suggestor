@@ -14,8 +14,7 @@ const DISH_TYPES = [
   { value: 'breakfast', label: 'Breakfast' },
   { value: 'soup', label: 'Soup' },
   { value: 'beverage', label: 'Beverage' },
-  { value: 'sauce', label: 'Sauce' },
-  { value: 'drink', label: 'Drink' }
+  { value: 'sauce', label: 'Sauce' }
 ];
 
 const Home = () => {
@@ -117,6 +116,7 @@ const Home = () => {
 
 
 
+
   const fetchRecipes = useCallback(async (isLoadMore = false) => {
     console.log('fetchRecipes called with ingredients:', ingredients, 'isLoadMore:', isLoadMore);
     
@@ -126,7 +126,8 @@ const Home = () => {
     console.log('Current cache:', cache);
     
     // Check if we have a saved complete recipe list (from load more scenario)
-    if (!isLoadMore && savedRecipeList && hadExpandedResults) {
+    // Only restore if we're not doing a new search and we have a non-zero offset
+    if (!isLoadMore && savedRecipeList && hadExpandedResults && offset > 0) {
       console.log('Restoring saved recipe list with expanded results');
       setRecipes(savedRecipeList.recipes);
       setOffset(savedRecipeList.offset);
@@ -345,34 +346,35 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, logoutTrigger]); // Only depend on user and logoutTrigger to prevent conflicts
 
-  // Handle user login/logout
-  useEffect(() => {
-    if (!user && ingredients.length === 0) {
-      // If user logs out and no ingredients are selected, fetch default recipes
-      fetchRecipes(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, ingredients.length]); // Remove fetchRecipes to prevent circular dependency
 
   // Auto-fetch when dish type changes (but not when ingredients change)
   useEffect(() => {
     if (!isInitialMount.current) {
       setScrollPosition(0); // Reset scroll position for new dish type
+      setOffset(0); // Reset offset for new search
       clearSavedData(); // Clear all saved data for new search
       localStorage.removeItem('recipeScrollPosition'); // Clear saved scroll position
+      
+      // Scroll to top of recipe list when dish type changes
+      const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+      }
+      
       fetchRecipes(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDishType]); // Remove fetchRecipes to prevent circular dependency
 
-  // Initial search when component mounts (only if ingredients exist)
+  // Initial search when component mounts
   useEffect(() => {
-    if (isInitialMount.current && ingredients.length > 0) {
+    if (isInitialMount.current) {
+      // Always fetch initial recipes on mount
       fetchRecipes(false);
       isInitialMount.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingredients.length]); // Remove fetchRecipes to prevent circular dependency
+  }, []); // Only run once on mount
 
   // Auto-update recipes when ingredients change (with consistent 2-second debouncing)
   useEffect(() => {

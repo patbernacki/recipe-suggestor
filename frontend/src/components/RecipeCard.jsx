@@ -141,7 +141,6 @@ const RecipeCard = ({ recipe, isSaved, onRecipeClick }) => {
                   </>
                 ) : (
                   <div className="inline-flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200 w-fit">
-                    <span>🎉</span>
                     <span className="font-medium">You have all the ingredients!</span>
                   </div>
                 )}
