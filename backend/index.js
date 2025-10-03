@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const knex = require('knex');
+const knex = require('./db');
 const knexConfig = require('./knexfile');
 
 dotenv.config();
@@ -9,11 +9,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Database connection
-const db = knex(knexConfig.production);
 
 // Run migrations on startup
-db.migrate.latest()
+knex.migrate.latest()
   .then(() => {
     console.log('Migrations completed');
   })
