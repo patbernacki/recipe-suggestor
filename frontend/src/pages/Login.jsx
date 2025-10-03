@@ -27,7 +27,7 @@ const Login = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 food-pattern flex flex-col py-12 sm:px-6 lg:px-8 justify-center pb-40">
       <Link
         to="/"
-        className="absolute top-8 left-8 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
+        className="absolute sm:top-8 sm:left-8 top-4 left-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
       >
         <svg
           className="h-4 w-4"
@@ -100,6 +100,7 @@ const Login = () => {
                 />
                 <button
                   type="button"
+                  tabIndex={-1}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >

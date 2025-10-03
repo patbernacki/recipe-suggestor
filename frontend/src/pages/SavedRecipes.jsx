@@ -79,7 +79,7 @@ const SavedRecipes = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Your Saved Recipes</h1>
+          <h1 className="sm:text-3xl text-xl font-bold text-gray-900">Your Saved Recipes</h1>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg"
@@ -87,8 +87,8 @@ const SavedRecipes = () => {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Recipes
-          </Link>
+            <span className="sm:hidden">Back</span>
+            <span className="hidden sm:inline">Back to Recipes</span>          </Link>
         </div>
         
         {error && (

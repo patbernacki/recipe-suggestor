@@ -466,7 +466,7 @@ const Home = () => {
 
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+    <div className="container mx-auto xl:p-8 p-4 max-w-screen-2xl">
       {/* Mobile Ingredient Selector Button */}
       <div className="lg:hidden mb-4">
         <button
@@ -538,11 +538,11 @@ const Home = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 lg:gap-4 xl:gap-8">
         {/* Left: Ingredient Selection - Desktop Only */}
         <div className="hidden lg:block lg:col-span-4">
-            <div className="p-6 pr-2 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow h-[calc(100vh-12rem)] border border-orange-100">
-            <div className="pr-1 h-full overflow-y-auto">
+            <div className="p-4 pr-2 xl:p-6 xl:pr-3 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow xl:h-[calc(100vh-12rem)] lg:h-[calc(100vh-10rem)] border border-orange-100">
+            <div className="pr-2 xl:pr-3 h-full overflow-y-auto">
               <h2 className="text-xl font-semibold mb-4">Select Your Ingredients</h2>
               <IngredientSelector 
                 ingredients={ingredients} 
@@ -557,7 +557,7 @@ const Home = () => {
 
         {/* Right: Results */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)] flex flex-col border border-orange-100">
+          <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow h-[calc(100vh-12rem)] lg:h-[calc(100vh-10rem)] xl:h-[calc(100vh-12rem)] md:h-[calc(100vh-14rem)] flex flex-col border border-orange-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 flex-shrink-0 gap-3 sm:gap-0">
               <h2 className="text-xl font-semibold text-gray-900">Recipe Suggestions</h2>
               <div className="flex items-center space-x-3">

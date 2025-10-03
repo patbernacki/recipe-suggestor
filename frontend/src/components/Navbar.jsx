@@ -29,11 +29,11 @@ const Navbar = () => {
 
   return (
     <nav className="bg-gradient-to-r from-orange-100 via-amber-100 to-yellow-100 shadow-lg border-b border-orange-200">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-screen-2xl">
         <div className="flex justify-between items-center">
           <div className="flex flex-col">
             <Link to="/" className="flex items-center">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Recipe Finder</h1>
+              <h1 className="sm:text-3xl text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Recipe Finder</h1>
             </Link>
             <p className="mt-2 text-orange-700 hidden md:block">Discover delicious recipes with ingredients you have at home</p>
           </div>
@@ -45,7 +45,10 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
                 >
-                  <span>Welcome, {user.username}</span>
+                  <span>
+                    <span className="hidden sm:inline">Welcome, </span>
+                    {user.username}
+                  </span>
                   <svg
                     className={`h-5 w-5 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}
                     fill="none"
@@ -109,7 +112,7 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center sm:space-x-4 ">
                 <Link
                   to="/login"
                   className="text-orange-700 hover:text-orange-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -118,7 +121,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 sm:px-4 sm:py-2 px-2 py-1 rounded-md text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Sign Up
                 </Link>
